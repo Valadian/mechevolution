@@ -5,7 +5,7 @@ class Game{
     init(){
         var w = 150;
         var h = 80;
-        ROT.RNG.setSeed(12354);
+        ROT.RNG.setSeed(12345);
         this.display = new ROT.Display({width:w,height:h,fontSize:6});
         document.body.appendChild(this.display.getContainer());
 
@@ -16,7 +16,7 @@ class Game{
             this.display.DEBUG(x,y,value);
         }) 
         var dijkstra = new ROT.Path.Dijkstra(93,38,(x,y)=>{
-            return (this.data[x+",",y]==0);
+            return (this.data[x+","+y]===0);
         });
         dijkstra.compute(8,45, (x,y)=>{
             this.display.draw(x,y,"","","#800");

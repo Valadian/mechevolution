@@ -1,4 +1,6 @@
 
+//https://github.com/ondras/rot.js Oct 5, 2016
+
 declare module ROT {
     function isSupported(): boolean;
     var DEFAULT_WIDTH: number;

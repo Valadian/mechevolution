@@ -5,7 +5,7 @@ var Game = (function () {
         var _this = this;
         var w = 150;
         var h = 80;
-        ROT.RNG.setSeed(12354);
+        ROT.RNG.setSeed(12345);
         this.display = new ROT.Display({ width: w, height: h, fontSize: 6 });
         document.body.appendChild(this.display.getContainer());
         this.data = {};
@@ -15,7 +15,7 @@ var Game = (function () {
             _this.display.DEBUG(x, y, value);
         });
         var dijkstra = new ROT.Path.Dijkstra(93, 38, function (x, y) {
-            return (_this.data[x + ",", y] == 0);
+            return (_this.data[x + "," + y] === 0);
         });
         dijkstra.compute(8, 45, function (x, y) {
             _this.display.draw(x, y, "", "", "#800");

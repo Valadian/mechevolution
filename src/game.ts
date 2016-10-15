@@ -1,39 +1,48 @@
 module bergecraft.rogue{
     export class Game{
-        player:Player;
-        scheduler:ROT.Scheduler<any>;
-        engine:ROT.Engine;
+        static player:Player;
+        static scheduler:ROT.Scheduler.Action;
+        static engine:ROT.Engine;
 
-        display:ROT.Display;
-        data:{};
-        map:ROT.Map.Cellular;
+        static display:ROT.Display;
+        static data:{};
+        static map:ROT.Map.Cellular;
         init(){
             var w = 150;
             var h = 80;
             //ROT.RNG.setSeed(12345);
-            this.display = new ROT.Display({width:w,height:h,fontSize:8});
-            document.body.appendChild(this.display.getContainer());
+            Game.display = new ROT.Display({width:w,height:h,fontSize:8});
+            document.body.appendChild(Game.display.getContainer());
 
-            this.data = {};
-            this.map = new ROT.Map.Cellular(w,h);
-            this.map.randomize(0.5); 
-            this.map.create((x,y,value) => {
-                this.data[x+","+y] = value;
-                this.display.DEBUG(x,y,value);
+            Game.data = {};
+            Game.map = new ROT.Map.Cellular(w,h);
+            Game.map.randomize(0.5); 
+            Game.map.create((x,y,value) => {
+                Game.data[x+","+y] = value;
+                Game.display.DEBUG(x,y,value);
             });
-            var player = new Player(this.findClearSpot());
-            this.display.draw(player.pos.x,player.pos.y,"","","#3f3");
+            new Promise((resolve, reject)=>{
+                resolve(this.findClearSpot());
+            }).then((pos:Vector2) => {
+                Game.player = new Player(pos);
+                Game.display.draw(Game.player.pos.x,Game.player.pos.y,"","","#3f3");
+            });
+
         }
         findClearSpot() {
-            var start_x = ROT.RNG.getUniformInt(0,this.display.getOptions().width-1);
-            var start_y = ROT.RNG.getUniformInt(0,this.display.getOptions().height-1);
-            return new Vector2(start_x,start_y);
+            var pos = new Vector2(0,0);
+            do{
+                pos.x = ROT.RNG.getUniformInt(0,Game.display.getOptions().width-1);
+                pos.y = ROT.RNG.getUniformInt(0,Game.display.getOptions().height-1);
+            } while (Game.data[pos.toString()]!=1)
+            return pos;
         }
-    }
-    class Player{
-        pos:Vector2;
-        constructor(pos:Vector2){
-            this.pos = pos;
+        handleEvent(e:any){
+            switch(e.type){
+                case "keypress":
+                    
+                    break;
+            }
         }
     }
 }

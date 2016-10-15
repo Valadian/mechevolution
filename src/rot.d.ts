@@ -249,7 +249,7 @@ declare module ROT {
     }
     export class Scheduler<T>{
         getTime():number;
-        //add(item:T,repeat:boolean):Scheduler<T>;
+        add(item:T,repeat:boolean):Scheduler<T>;
         clear():Scheduler<T>;
         remove(item:T):boolean;
         next():T;
@@ -317,17 +317,13 @@ declare module ROT {
 }
 declare module ROT.Scheduler{
     
-    export class Simple extends Scheduler<any>{
-        add(item:any, repeat:boolean):Simple
-    }
+    export class Simple extends Scheduler<any>{}
     interface ISpeedItem{
         getSpeed():number;
     }
-    export class Speed extends Scheduler<ISpeedItem>{
-        add(item:any, repeat:boolean):Speed
-    }
+    export class Speed extends Scheduler<ISpeedItem>{}
     export class Action extends Scheduler<any>{
-        add(item:any, repeat:boolean, time:number):Action
+        add(item:any, repeat:boolean, time?:number):Action
         setDuration(time:number):Action;
     }
 }

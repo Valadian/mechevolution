@@ -1,7 +1,11 @@
 {
     "compilerOptions": {
-        "target": "ES5",
-        "module":"umd",
-        "sourceMap": true
+        "target": "es5",
+        "module":"amd",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "outFile":"js/site.js",
+        "sourceRoot":"./src/",
+        "rootDir": "./src/"
     }
 }

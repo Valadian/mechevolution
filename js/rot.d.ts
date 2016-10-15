@@ -233,14 +233,34 @@ declare module ROT {
         order:number;
         prior:number;
     }
-    interface StringGenerator{
+    export class StringGenerator{
         constructor(options?:StringGeneratorOptions);
         clear();
         generate():string;
         observe(string:string);
         getStats():string;
     }
-     export class Map{
+    export class EventQueue{
+        getTime():number;
+        clear():EventQueue;
+        add(event:any,time:number):void;
+        get():any|void;
+        remove(event:any):boolean;
+    }
+    export class Scheduler<T>{
+        getTime():number;
+        //add(item:T,repeat:boolean):Scheduler<T>;
+        clear():Scheduler<T>;
+        remove(item:T):boolean;
+        next():T;
+    }
+    export class Engine{
+        constructor(scheduler:Scheduler<any>);
+        start():Engine;
+        lock():Engine;
+        unlock():Engine;
+    }
+    export class Map{
         constructor(width?: number, height?: number);
         create(callback?: DigCallback ): void;
     }
@@ -293,6 +313,22 @@ declare module ROT {
         clearLights();
         reset():Lighting;
         compute(lightingCallback:LightingCallback):Lighting
+    }
+}
+declare module ROT.Scheduler{
+    
+    export class Simple extends Scheduler<any>{
+        add(item:any, repeat:boolean):Simple
+    }
+    interface ISpeedItem{
+        getSpeed():number;
+    }
+    export class Speed extends Scheduler<ISpeedItem>{
+        add(item:any, repeat:boolean):Speed
+    }
+    export class Action extends Scheduler<any>{
+        add(item:any, repeat:boolean, time:number):Action
+        setDuration(time:number):Action;
     }
 }
 declare module ROT.Map{

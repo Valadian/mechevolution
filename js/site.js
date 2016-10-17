@@ -123,14 +123,12 @@ var bergecraft;
             }
             Game.prototype.init = function () {
                 var _this = this;
-                var w = 150;
-                var h = 80;
                 //ROT.RNG.setSeed(12345);
-                Game.display = new ROT.Display({ width: w, height: h, fontSize: 8 });
+                Game.display = new ROT.Display({ width: Game.MAP_SIZE.x, height: Game.MAP_SIZE.y, fontSize: 8 });
                 document.body.appendChild(Game.display.getContainer());
                 Game.data = {};
-                Game.map = new ROT.Map.Cellular(w, h);
-                Game.map.randomize(0.5);
+                Game.map = new ROT.Map.Cellular(Game.MAP_SIZE.x, Game.MAP_SIZE.y);
+                Game.map.randomize(0.42);
                 Game.map.create(function (x, y, value) {
                     Game.data[x + "," + y] = value;
                     Game.display.DEBUG(x, y, value);
@@ -145,8 +143,8 @@ var bergecraft;
             Game.prototype.findClearSpot = function () {
                 var pos = new rogue.Vector2(0, 0);
                 do {
-                    pos.x = ROT.RNG.getUniformInt(0, Game.display.getOptions().width - 1);
-                    pos.y = ROT.RNG.getUniformInt(0, Game.display.getOptions().height - 1);
+                    pos.x = ROT.RNG.getUniformInt(0, Game.MAP_SIZE.x - 1);
+                    pos.y = ROT.RNG.getUniformInt(0, Game.MAP_SIZE.y - 1);
                 } while (Game.data[pos.toString()] != 1);
                 return pos;
             };

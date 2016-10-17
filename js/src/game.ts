@@ -1,5 +1,9 @@
+/// <reference path="vector2.ts" />
 module bergecraft.rogue{
     export class Game{
+	    static TEXT_HEIGHT = 3;
+	    static STATUS_HEIGHT = 3;
+	    static MAP_SIZE =  new Vector2(100, 30);
         static player:Player;
         static scheduler:ROT.Scheduler.Action;
         static engine:ROT.Engine;
@@ -16,7 +20,7 @@ module bergecraft.rogue{
 
             Game.data = {};
             Game.map = new ROT.Map.Cellular(w,h);
-            Game.map.randomize(0.5); 
+            Game.map.randomize(0.2); 
             Game.map.create((x,y,value) => {
                 Game.data[x+","+y] = value;
                 Game.display.DEBUG(x,y,value);

@@ -1,25 +1,21 @@
 /// <reference path="entity.ts" />
 module bergecraft.rogue{
-    interface IVisual{
-        ch:string;
-        fg:[number,number,number];
-        description?:string;
-    }
     export class Cell extends Entity{
         enter:Function;
         activate:Function;
-        _solid:{};
+        _solid:boolean;
         constructor(visual:IVisual,solid:boolean){
             super(visual);
             this._solid = solid;
         }
-        solid(){
+        solid():boolean{
             return this._solid
         }
         static wall = new Cell({
-            ch: "#",
-            fg: [150,150,150],
-            description: "rock"
+            ch: "",
+            fg: [50,50,50],
+            bg: [50,50,50],
+            description: "stone wall"
         },true)
         static diamond = new Cell({
             ch: "▼",
@@ -48,7 +44,7 @@ module bergecraft.rogue{
         },true);
         static empty = new Cell({
             ch: ".",
-            fg: [51, 51, 51]
+            fg: [151, 151, 151]
         }, false);
     }
 }

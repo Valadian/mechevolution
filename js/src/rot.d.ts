@@ -210,7 +210,7 @@ declare module ROT {
         computeSize(availWidth:number,availHeight:number):number[];
         computeFontSize(availWidth:number,availHeight:number):number;
         eventToPosition(e:any):number[];//TODO: event
-        draw(x:number,y:number,ch:string|string[],fg?:string,bg?:string);
+        draw(x:number,y:number,ch?:string|string[],fg?:string,bg?:string);
         drawText(x:number,y:number,text:string,maxWidth:number):number;
     }
     interface Dictionary<T> {
@@ -287,18 +287,18 @@ declare module ROT {
         compute(fromX:number, fromY:number, calbback:PathCallback);
     }
     export class Color{
-        static fromString(str:string):number[];
-        static add(color1:number[],color2:number[]):number[];
-        static add_(color1:number[],color2:number[]):number[];
-        static multiply(color1:number[],color2:number[]):number[];
-        static multiply_(color1:number[],color2:number[]):number[];
-        static interpolate(color1:number[],color2:number[],factor:number):number[];
-        static interpolateHSL(color1:number[],color2:number[],factor:number):number[];
-        static randomize(color1:number[],color2:number[]):number[];
-        static rgb2hsl(color:number[]):number[];
-        static hsl2rgb(color:number[]):number[];
-        static toRGB(color:number[]):string;
-        static toHex(color:number[]):string;
+        static fromString(str:string):[number, number, number];
+        static add(color1:[number, number, number],color2:[number, number, number]):[number, number, number];
+        static add_(color1:[number, number, number],color2:[number, number, number]):[number, number, number];
+        static multiply(color1:[number, number, number],color2:[number, number, number]):[number, number, number];
+        static multiply_(color1:[number, number, number],color2:[number, number, number]):[number, number, number];
+        static interpolate(color1:[number, number, number],color2:[number, number, number],factor:number):[number, number, number];
+        static interpolateHSL(color1:[number, number, number],color2:[number, number, number],factor:number):[number, number, number];
+        static randomize(color1:[number, number, number],color2:[number, number, number]):[number, number, number];
+        static rgb2hsl(color:[number, number, number]):[number, number, number];
+        static hsl2rgb(color:[number, number, number]):[number, number, number];
+        static toRGB(color:[number, number, number]):string;
+        static toHex(color:[number, number, number]):string;
     }
     interface ILightingOptions{
         passes?:number;
@@ -421,10 +421,26 @@ declare module ROT.FOV{
 }
 declare module ROT.Noise{
     export class Simplex extends Noise{
-        constructor(gradients:number);
+        constructor(gradients?:number);
     }
 }
 declare module ROT.Path{
     export class Dijkstra extends Path{}
     export class AStar extends Path{}
+}
+interface Array<T> {
+    random(): T;
+    randomize<T>():T[];
+}
+declare module String.format{
+    
+}
+interface String{
+    capitalize():String;
+    lpad(character:string,count:number):string;
+    rpad(character:string,count:number):string;
+    format(object:any,...argv: any[])
+}
+interface StringConstructor {
+    format(template:string):string;
 }

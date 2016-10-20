@@ -2,11 +2,11 @@ module bergecraft.rogue{
     export class Vector2 { 
         x:number;
         y:number;
-        constructor(x:number, y:number) {
+        constructor(x?:number, y?:number) {
             this.x = x||0;
             this.y = y||0;
         }
-        fromString(str:string){
+        static fromString(str:string){
             var parts = str.split(",");
             return new Vector2(Number(parts[0]),Number(parts[1]));
         }

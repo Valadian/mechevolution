@@ -4,6 +4,8 @@ module bergecraft.rogue{
         update(){
             var row1 = 1+Game.TEXT_HEIGHT+Game.MAP_SIZE.y;
             var row2 = 2+Game.TEXT_HEIGHT+Game.MAP_SIZE.y;
+            Game.display.drawText(1,row1," ".rpad(" ",50),50);
+            Game.display.drawText(1,row2," ".rpad(" ",50),50);
             Game.display.drawText(1,row1,"  Mode: ",6);
             Game.display.drawText(10,row1,PlayerMode[Game.player.mode],10);
 

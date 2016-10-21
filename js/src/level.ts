@@ -114,7 +114,11 @@ module bergecraft.rogue.Level{
         }
         _create(){
             this._createWalls();
-            this._createMinerals();
+            this._createMinerals(Cell.diamond,10);
+            this._createMinerals(Cell.iron,50);
+            this._createMinerals(Cell.copper,125);
+            this._createMinerals(Cell.tin,125);
+            this._createMinerals(Cell.quartz,20);
         }
         _createWalls(){
             for(var val in Game.data){
@@ -129,8 +133,13 @@ module bergecraft.rogue.Level{
                 //this.draw(Vector2.fromString(val));
             }
         }
-        _createMinerals(){
-
+        _createMinerals(mineral:Cell,count:number ){
+            for(var i = 0; i<count; i++){
+                var pos = this._getRandomPos();
+                if(pos && this.getCellAt(pos)==Cell.wall){
+                    this._cells[pos.toString()] = mineral;
+                }
+            }
         }
         drawMemory() {
             this._fov = {};
@@ -204,9 +213,14 @@ module bergecraft.rogue.Level{
         getSpawn(){
             var pos = new Vector2(0,0);
             do{
-                pos.x = ROT.RNG.getUniformInt(0,Game.MAP_SIZE.x-1);
-                pos.y = ROT.RNG.getUniformInt(0,Game.MAP_SIZE.y-1);
+                pos = this._getRandomPos();
             } while (Game.data[pos.toString()]!=1)
+            return pos;
+        }
+        _getRandomPos(){
+            var pos = new Vector2(0,0);
+            pos.x = ROT.RNG.getUniformInt(0,Game.MAP_SIZE.x-1);
+            pos.y = ROT.RNG.getUniformInt(0,Game.MAP_SIZE.y-1);
             return pos;
         }
 

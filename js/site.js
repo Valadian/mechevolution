@@ -229,30 +229,35 @@ var bergecraft;
                 description: "stone wall"
             }, true, Cell.wall_1);
             Cell.diamond = new Cell({
-                ch: "▼",
+                ch: "d",
                 fg: [185, 242, 355],
+                bg: [50, 50, 50],
                 description: "diamond"
-            }, true);
+            }, true, Cell.wall);
             Cell.iron = new Cell({
-                ch: "■",
+                ch: "i",
                 fg: [230, 231, 232],
+                bg: [50, 50, 50],
                 description: "iron"
-            }, true);
+            }, true, Cell.wall);
             Cell.copper = new Cell({
-                ch: "▬",
+                ch: "c",
                 fg: [184, 115, 51],
+                bg: [50, 50, 50],
                 description: "copper"
-            }, true);
+            }, true, Cell.wall);
             Cell.tin = new Cell({
-                ch: "▬",
+                ch: "t",
                 fg: [211, 212, 213],
+                bg: [50, 50, 50],
                 description: "tin"
-            }, true);
+            }, true, Cell.wall);
             Cell.quartz = new Cell({
-                ch: "♦",
+                ch: "q",
                 fg: [255, 255, 255],
+                bg: [50, 50, 50],
                 description: "quartz"
-            }, true);
+            }, true, Cell.wall);
             Cell.empty = new Cell({
                 ch: ".",
                 fg: [151, 151, 151]
@@ -325,7 +330,7 @@ var bergecraft;
                 document.body.appendChild(Game.display.getContainer());
                 Game.data = {};
                 Game.map = new ROT.Map.Cellular(Game.MAP_SIZE.x, Game.MAP_SIZE.y);
-                Game.map.randomize(0.42);
+                Game.map.randomize(0.55);
                 Game.map.create(function (x, y, value) {
                     Game.data[x + "," + y] = value;
                     //Game.display.DEBUG(x,y,value);
@@ -508,7 +513,11 @@ var bergecraft;
                 }
                 Underground.prototype._create = function () {
                     this._createWalls();
-                    this._createMinerals();
+                    this._createMinerals(rogue.Cell.diamond, 10);
+                    this._createMinerals(rogue.Cell.iron, 50);
+                    this._createMinerals(rogue.Cell.copper, 125);
+                    this._createMinerals(rogue.Cell.tin, 125);
+                    this._createMinerals(rogue.Cell.quartz, 20);
                 };
                 Underground.prototype._createWalls = function () {
                     for (var val in rogue.Game.data) {
@@ -522,7 +531,13 @@ var bergecraft;
                         }
                     }
                 };
-                Underground.prototype._createMinerals = function () {
+                Underground.prototype._createMinerals = function (mineral, count) {
+                    for (var i = 0; i < count; i++) {
+                        var pos = this._getRandomPos();
+                        if (pos && this.getCellAt(pos) == rogue.Cell.wall) {
+                            this._cells[pos.toString()] = mineral;
+                        }
+                    }
                 };
                 Underground.prototype.drawMemory = function () {
                     this._fov = {};
@@ -600,9 +615,14 @@ var bergecraft;
                 Underground.prototype.getSpawn = function () {
                     var pos = new rogue.Vector2(0, 0);
                     do {
-                        pos.x = ROT.RNG.getUniformInt(0, rogue.Game.MAP_SIZE.x - 1);
-                        pos.y = ROT.RNG.getUniformInt(0, rogue.Game.MAP_SIZE.y - 1);
+                        pos = this._getRandomPos();
                     } while (rogue.Game.data[pos.toString()] != 1);
+                    return pos;
+                };
+                Underground.prototype._getRandomPos = function () {
+                    var pos = new rogue.Vector2(0, 0);
+                    pos.x = ROT.RNG.getUniformInt(0, rogue.Game.MAP_SIZE.x - 1);
+                    pos.y = ROT.RNG.getUniformInt(0, rogue.Game.MAP_SIZE.y - 1);
                     return pos;
                 };
                 return Underground;
@@ -929,6 +949,8 @@ var bergecraft;
             Status.prototype.update = function () {
                 var row1 = 1 + rogue.Game.TEXT_HEIGHT + rogue.Game.MAP_SIZE.y;
                 var row2 = 2 + rogue.Game.TEXT_HEIGHT + rogue.Game.MAP_SIZE.y;
+                rogue.Game.display.drawText(1, row1, " ".rpad(" ", 50), 50);
+                rogue.Game.display.drawText(1, row2, " ".rpad(" ", 50), 50);
                 rogue.Game.display.drawText(1, row1, "  Mode: ", 6);
                 rogue.Game.display.drawText(10, row1, rogue.PlayerMode[rogue.Game.player.mode], 10);
                 rogue.Game.display.drawText(1, row2, "Tool: ", 6);

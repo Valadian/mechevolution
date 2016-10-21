@@ -26,7 +26,7 @@ module bergecraft.rogue{
 
             Game.data = {};
             Game.map = new ROT.Map.Cellular(Game.MAP_SIZE.x,Game.MAP_SIZE.y);
-            Game.map.randomize(0.42); 
+            Game.map.randomize(0.55); 
             Game.map.create((x,y,value) => {
                 Game.data[x+","+y] = value;
                 //Game.display.DEBUG(x,y,value);

@@ -1,6 +1,11 @@
 /// <reference path="being.ts" />
 module bergecraft.rogue{
+    export enum PlayerMode{
+        move = 0,mine,build
+    }
     export class Player extends Being{
+        mode:PlayerMode;
+        tool:string = "Pickaxe";
         pos:Vector2;
         _keys:{};
         _promise:Promise = null;
@@ -9,6 +14,9 @@ module bergecraft.rogue{
 
             this._char = "B";
             this._color = ROT.Color.fromString("green");
+            this.mode = PlayerMode.move;
+            this.setStat("hp",4);
+            this.setStat("defense",5);
 
             this._keys = {};
             this._keys[ROT.VK_K] = 0;
@@ -55,17 +63,53 @@ module bergecraft.rogue{
             window.removeEventListener("keydown", this);
             Game.text.clear();
 	        var code = e.keyCode;
-
+            if(code==ROT.VK_TAB){
+			    e.preventDefault();
+                const objValues = Object.keys(PlayerMode).map(k => PlayerMode[k]);
+                const values = objValues.filter(v => typeof v === "number") as number[];
+                this.mode = (this.mode+1)%values.length;
+                Game.status.update();
+                this._listen();
+            }
             if(code in this._keys){
                 var direction = this._keys[code];
                 var dir = ROT.DIRS[8][direction];
                 var xy = this._pos.plus(new Vector2(dir[0], dir[1]));
-                if (this._level.solid(xy)) { /* collision, noop */
-                    var d = this._level.getCellAt(xy).getVisual().description;
-                    if (d) { Game.text.write("You bump into %a.".format(this._level.getCellAt(xy))); }
-                    return this._listen();
-                } else { /* movement */
-                    this._level.setBeing(this, xy);
+                switch(this.mode){
+                    case PlayerMode.move:
+                        if (this._level.solid(xy)) { /* collision, noop */
+                            var d = this._level.getCellAt(xy).getVisual().description;
+                            if (d) { Game.text.write("You bump into %a.".format(this._level.getCellAt(xy))); }
+                            return this._listen();
+                        } else { /* movement */
+                            this._level.setBeing(this, xy);
+                        }
+                        break;
+                    case PlayerMode.mine:
+                        if (this._level.solid(xy)) { /* collision, noop */
+                            var target = this._level.getCellAt(xy);
+                            var targetName = target.toString();
+                            var d = target.getVisual().description;
+                            if (d) { 
+                                var damageMessage = ("You hit %a with your "+this.tool+".").format(this._level.getCellAt(xy));
+                                var destroyMessage = ("You destroy %a with your "+this.tool+".").format(this._level.getCellAt(xy));
+                                var next = target.incrementState();
+                                if(next){
+                                    this._level.setCell(next,xy);
+                                    Game.text.write(damageMessage);
+                                } else{
+                                    Game.level.setCell(Cell.empty,xy);
+                                    Game.text.write(destroyMessage);
+                                }
+                                Game.level.draw(xy);
+                            }
+                            return this._listen();
+                        } else { /* movement */
+                            Game.text.write("You swing at the air.");
+                        }
+                        break;
+                    case PlayerMode.build:
+                        break;
                 }
                 return this._promise.fulfill();
             }

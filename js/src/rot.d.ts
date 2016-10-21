@@ -432,9 +432,6 @@ interface Array<T> {
     random(): T;
     randomize<T>():T[];
 }
-declare module String.format{
-    
-}
 interface String{
     capitalize():String;
     lpad(character:string,count:number):string;

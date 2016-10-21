@@ -4,7 +4,7 @@ module bergecraft.rogue{
 	    static TEXT_HEIGHT = 3;
 	    static FONT_SIZE = 20;
 	    static STATUS_HEIGHT = 3;
-	    static MAP_SIZE =  new Vector2(150, 45);
+	    static MAP_SIZE =  new Vector2(150, 40);
         static player:Player;
         static scheduler:ROT.Scheduler.Action;
         static engine:ROT.Engine;
@@ -13,11 +13,15 @@ module bergecraft.rogue{
         static data:{};
         static map:ROT.Map.Cellular;
         static text:TextBuffer;
+        static status:Status;
         static init(){
             //ROT.RNG.setSeed(12345);
             
-			this.player = new Player();
-            Game.display = new ROT.Display({width:Game.MAP_SIZE.x,height:Game.MAP_SIZE.y+Game.TEXT_HEIGHT,fontSize:Game.FONT_SIZE});
+			Game.player = new Player();
+            Game.display = new ROT.Display({
+                width:Game.MAP_SIZE.x,
+                height:Game.MAP_SIZE.y+Game.TEXT_HEIGHT+Game.STATUS_HEIGHT,
+                fontSize:Game.FONT_SIZE});
             document.body.appendChild(Game.display.getContainer());
 
             Game.data = {};
@@ -36,7 +40,8 @@ module bergecraft.rogue{
                 size: new Vector2(Game.MAP_SIZE.x, Game.TEXT_HEIGHT)
             });
             Game.text.clear();
-
+            Game.text.write("[asdf] or [arrows] to move. [tab] to change mode")
+            Game.status = new Status();
             // new Promise((resolve, reject)=>{
             //     resolve(this.findClearSpot());
             // }).then((pos:Vector2) => {
@@ -44,6 +49,7 @@ module bergecraft.rogue{
             //     Game.display.draw(Game.player.pos.x,Game.player.pos.y,"","","#3f3");
             // });
             Game._start();
+            Game.status.update();
         }
         // static findClearSpot() {
         //     var pos = new Vector2(0,0);

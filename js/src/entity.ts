@@ -46,9 +46,9 @@ module bergecraft.rogue{
             return this._visual.description;
         }
     }
-    String.format.map.a = "a";
-    String.format.map.the = "the";
-    String.format.map.verb = "verb";
-    String.format.map.it = "it";
-    String.format.map.h = "formatHelp";
+    (String.format as any).map.a = "a";
+    (String.format as any).map.the = "the";
+    (String.format as any).map.verb = "verb";
+    (String.format as any).map.it = "it";
+    (String.format as any).map.h = "formatHelp";
 }

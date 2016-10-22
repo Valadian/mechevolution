@@ -4,7 +4,7 @@ module bergecraft.rogue{
 	    static TEXT_HEIGHT = 3;
 	    static FONT_SIZE = 20;
 	    static STATUS_HEIGHT = 3;
-	    static MAP_SIZE =  new Vector2(150, 40);
+	    static MAP_SIZE =  new Vector2(80, 40);
         static player:Player;
         static scheduler:ROT.Scheduler.Action;
         static engine:ROT.Engine;
@@ -21,7 +21,8 @@ module bergecraft.rogue{
             Game.display = new ROT.Display({
                 width:Game.MAP_SIZE.x,
                 height:Game.MAP_SIZE.y+Game.TEXT_HEIGHT+Game.STATUS_HEIGHT,
-                fontSize:Game.FONT_SIZE});
+                fontSize:Game.FONT_SIZE,
+                forceSquareRatio:true});
             document.body.appendChild(Game.display.getContainer());
 
             Game.data = {};

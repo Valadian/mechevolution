@@ -65,31 +65,31 @@ module bergecraft.rogue{
             description: "stone wall"
         },true,Cell.wall_1)
         static diamond = new Cell({
-            ch: "d",//▼
-            fg: [185,242,355],
+            ch: "\u25BC",//▼d
+            fg: [167,218,255],
             bg: [50,50,50],
             description:"diamond"
         },true,Cell.wall);
         static iron = new Cell({
-            ch: "i",//■
+            ch: "\u220E",//∎i/u25A0
             fg: [230,231,232],
             bg: [50,50,50],
             description:"iron"
         },true,Cell.wall);
         static copper = new Cell({
-            ch: "c",//▬
+            ch: "\u25AC",//▬c
             fg: [184,115,51],
             bg: [50,50,50],
             description:"copper"
         },true,Cell.wall);
         static tin = new Cell({
-            ch: "t",//▬
+            ch: "\u25AC",//▬t
             fg: [211,212,213],
             bg: [50,50,50],
             description:"tin"
         },true,Cell.wall);
         static quartz = new Cell({
-            ch: "q",//♦
+            ch: "\u2666",//♦q
             fg: [255,255,255],
             bg: [50,50,50],
             description:"quartz"

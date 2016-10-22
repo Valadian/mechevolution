@@ -229,31 +229,31 @@ var bergecraft;
                 description: "stone wall"
             }, true, Cell.wall_1);
             Cell.diamond = new Cell({
-                ch: "d",
-                fg: [185, 242, 355],
+                ch: "\u25BC",
+                fg: [167, 218, 255],
                 bg: [50, 50, 50],
                 description: "diamond"
             }, true, Cell.wall);
             Cell.iron = new Cell({
-                ch: "i",
+                ch: "\u220E",
                 fg: [230, 231, 232],
                 bg: [50, 50, 50],
                 description: "iron"
             }, true, Cell.wall);
             Cell.copper = new Cell({
-                ch: "c",
+                ch: "\u25AC",
                 fg: [184, 115, 51],
                 bg: [50, 50, 50],
                 description: "copper"
             }, true, Cell.wall);
             Cell.tin = new Cell({
-                ch: "t",
+                ch: "\u25AC",
                 fg: [211, 212, 213],
                 bg: [50, 50, 50],
                 description: "tin"
             }, true, Cell.wall);
             Cell.quartz = new Cell({
-                ch: "q",
+                ch: "\u2666",
                 fg: [255, 255, 255],
                 bg: [50, 50, 50],
                 description: "quartz"
@@ -326,7 +326,8 @@ var bergecraft;
                 Game.display = new ROT.Display({
                     width: Game.MAP_SIZE.x,
                     height: Game.MAP_SIZE.y + Game.TEXT_HEIGHT + Game.STATUS_HEIGHT,
-                    fontSize: Game.FONT_SIZE });
+                    fontSize: Game.FONT_SIZE,
+                    forceSquareRatio: true });
                 document.body.appendChild(Game.display.getContainer());
                 Game.data = {};
                 Game.map = new ROT.Map.Cellular(Game.MAP_SIZE.x, Game.MAP_SIZE.y);
@@ -388,7 +389,7 @@ var bergecraft;
             Game.TEXT_HEIGHT = 3;
             Game.FONT_SIZE = 20;
             Game.STATUS_HEIGHT = 3;
-            Game.MAP_SIZE = new rogue.Vector2(150, 40);
+            Game.MAP_SIZE = new rogue.Vector2(80, 40);
             return Game;
         }());
         rogue.Game = Game;
@@ -437,9 +438,14 @@ var bergecraft;
                 return (this._cells[xy.toString()] || this._empty).solid();
             };
             Level.prototype.draw = function (xy) {
-                var visual = this._visualAt(xy);
-                var bg = visual.bg || this._getBackgroundColor(xy);
-                rogue.Game.display.draw(xy.x, xy.y + rogue.Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(visual.fg), ROT.Color.toRGB(bg));
+                if (this.isInMap(xy)) {
+                    var visual = this._visualAt(xy);
+                    var bg = visual.bg || this._getBackgroundColor(xy);
+                    rogue.Game.display.draw(xy.x, xy.y + rogue.Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(visual.fg), ROT.Color.toRGB(bg));
+                }
+            };
+            Level.prototype.isInMap = function (xy) {
+                return xy.x > 0 && xy.y > 0 && xy.x < rogue.Game.MAP_SIZE.x && xy.y < rogue.Game.MAP_SIZE.y;
             };
             Level.prototype._getBackgroundColor = function (xy) {
                 return [255, 255, 255];
@@ -585,9 +591,11 @@ var bergecraft;
                     }
                 };
                 Underground.prototype._drawWeak = function (xy, visual) {
-                    var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.5);
-                    var bg = visual.bg || this._getBackgroundColor(xy);
-                    rogue.Game.display.draw(xy.x, xy.y + rogue.Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(fg), ROT.Color.toRGB(bg));
+                    if (this.isInMap(xy)) {
+                        var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.5);
+                        var bg = visual.bg || this._getBackgroundColor(xy);
+                        rogue.Game.display.draw(xy.x, xy.y + rogue.Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(fg), ROT.Color.toRGB(bg));
+                    }
                 };
                 Underground.prototype._updateFOV = function (being) {
                     var oldFOV = this._fov;
@@ -648,6 +656,8 @@ var bergecraft;
                 _super.call(this, { ch: "B", fg: [0, 255, 0], description: "self" });
                 this.tool = "Pickaxe";
                 this._promise = null;
+                this._ch_dirs = {};
+                this._ch_dirs = ["\u25B2", "\u25E5", "\u25B6", "\u25E2", "\u25BC", "\u25E3", "\u25C0", "\u25E4"];
                 this._char = "B";
                 this._color = ROT.Color.fromString("green");
                 this.mode = PlayerMode.move;
@@ -657,24 +667,28 @@ var bergecraft;
                 this._keys[ROT.VK_K] = 0;
                 this._keys[ROT.VK_UP] = 0;
                 this._keys[ROT.VK_NUMPAD8] = 0;
+                this._keys[ROT.VK_W] = 0;
                 this._keys[ROT.VK_U] = 1;
                 this._keys[ROT.VK_PAGE_UP] = 1;
                 this._keys[ROT.VK_NUMPAD9] = 1;
                 this._keys[ROT.VK_L] = 2;
                 this._keys[ROT.VK_RIGHT] = 2;
                 this._keys[ROT.VK_NUMPAD6] = 2;
+                this._keys[ROT.VK_D] = 2;
                 this._keys[ROT.VK_N] = 3;
                 this._keys[ROT.VK_PAGE_DOWN] = 3;
                 this._keys[ROT.VK_NUMPAD3] = 3;
                 this._keys[ROT.VK_J] = 4;
                 this._keys[ROT.VK_DOWN] = 4;
                 this._keys[ROT.VK_NUMPAD2] = 4;
+                this._keys[ROT.VK_S] = 4;
                 this._keys[ROT.VK_B] = 5;
                 this._keys[ROT.VK_END] = 5;
                 this._keys[ROT.VK_NUMPAD1] = 5;
                 this._keys[ROT.VK_H] = 6;
                 this._keys[ROT.VK_LEFT] = 6;
                 this._keys[ROT.VK_NUMPAD4] = 6;
+                this._keys[ROT.VK_A] = 6;
                 this._keys[ROT.VK_Y] = 7;
                 this._keys[ROT.VK_HOME] = 7;
                 this._keys[ROT.VK_NUMPAD7] = 7;
@@ -710,6 +724,7 @@ var bergecraft;
                 }
                 if (code in this._keys) {
                     var direction = this._keys[code];
+                    this._visual.ch = this._ch_dirs[direction];
                     var dir = ROT.DIRS[8][direction];
                     var xy = this._pos.plus(new rogue.Vector2(dir[0], dir[1]));
                     switch (this.mode) {
@@ -719,6 +734,10 @@ var bergecraft;
                                 if (d) {
                                     rogue.Game.text.write("You bump into %a.".format(this._level.getCellAt(xy)));
                                 }
+                                return this._listen();
+                            }
+                            else if (!this._level.isInMap(xy)) {
+                                rogue.Game.text.write("You bump into the edge of the world.");
                                 return this._listen();
                             }
                             else {
@@ -732,7 +751,7 @@ var bergecraft;
                                 var d = target.getVisual().description;
                                 if (d) {
                                     var damageMessage = ("You hit %a with your " + this.tool + ".").format(this._level.getCellAt(xy));
-                                    var destroyMessage = ("You destroy %a with your " + this.tool + ".").format(this._level.getCellAt(xy));
+                                    var destroyMessage = ("You destroy %a with your %s.").format(this._level.getCellAt(xy), this.tool);
                                     var next = target.incrementState();
                                     if (next) {
                                         this._level.setCell(next, xy);
@@ -753,7 +772,7 @@ var bergecraft;
                         case PlayerMode.build:
                             break;
                     }
-                    return this._promise.fulfill();
+                    return this._listen();
                 }
             };
             Player.prototype.computeFOV = function () {
@@ -949,16 +968,35 @@ var bergecraft;
             Status.prototype.update = function () {
                 var row1 = 1 + rogue.Game.TEXT_HEIGHT + rogue.Game.MAP_SIZE.y;
                 var row2 = 2 + rogue.Game.TEXT_HEIGHT + rogue.Game.MAP_SIZE.y;
-                rogue.Game.display.drawText(1, row1, " ".rpad(" ", 50), 50);
-                rogue.Game.display.drawText(1, row2, " ".rpad(" ", 50), 50);
+                // this.drawCharacters(1,row1," ",50,50);
+                // this.drawCharacters(1,row2," ",50,50);
                 rogue.Game.display.drawText(1, row1, "  Mode: ", 6);
-                rogue.Game.display.drawText(10, row1, rogue.PlayerMode[rogue.Game.player.mode], 10);
+                this.clearAndDrawText(10, row1, rogue.PlayerMode[rogue.Game.player.mode], 10);
+                // Game.display.drawText(10,row1,PlayerMode[Game.player.mode],10);
                 rogue.Game.display.drawText(1, row2, "Tool: ", 6);
                 rogue.Game.display.drawText(10, row2, rogue.Game.player.tool, 10);
                 rogue.Game.display.drawText(30, row1, "Health: ", 6);
-                rogue.Game.display.drawText(40, row1, "%c{#f00}".rpad("o", 8 + rogue.Game.player.getStat("hp")) + "%c{}", 10); //❤ 
+                //Game.display.drawText(40,row1,"%c{#f00}".rpad("o",8+Game.player.getStat("hp"))+"%c{}",10); //❤ 
+                this.drawCharacters(40, row1, "\u2764", rogue.Game.player.getStat("hp"), 10, "#f00"); //,null,2
                 rogue.Game.display.drawText(30, row2, "Armor  : ", 6);
-                rogue.Game.display.drawText(40, row2, "%c{#999}".rpad("o", 8 + rogue.Game.player.getStat("defense")) + "%c{}", 10); //⛊
+                //Game.display.drawText(40,row2,"%c{#999}".rpad("o",8+Game.player.getStat("defense"))+"%c{}",10); //⛊
+                this.drawCharacters(40, row2, "\u26CA", rogue.Game.player.getStat("defense"), 10, "#999"); //,null,2
+                //Game.display.draw(40,row2,"⛊")
+            };
+            Status.prototype.clearAndDrawText = function (x, y, text, clearSize) {
+                this.drawCharacters(x, y, " ", clearSize, clearSize);
+                rogue.Game.display.drawText(x, y, text, clearSize);
+            };
+            Status.prototype.drawCharacters = function (x, y, text, count, maxWidth, fg, bg, inc) {
+                var inc = inc || 1;
+                for (var i = 0; i < maxWidth; i++) {
+                    if (i < count) {
+                        rogue.Game.display.draw(x + i * inc, y, text, fg, bg);
+                    }
+                    else {
+                        rogue.Game.display.draw(x + i * inc, y, " ", fg, bg);
+                    }
+                }
             };
             return Status;
         }());

@@ -10,6 +10,7 @@ module bergecraft.rogue{
         isVisible(xy:Vector2):boolean;
         setBeing(being:Being, xy:Vector2);
         getCellAt(xy:Vector2):Cell;
+        isInMap(xy:Vector2):boolean;
     }
     export abstract class Level implements ILevel{
         _size = Game.MAP_SIZE;
@@ -50,9 +51,14 @@ module bergecraft.rogue{
             return (this._cells[xy.toString()] || this._empty).solid();
         }
         draw(xy:Vector2){
-            var visual = this._visualAt(xy);
-            var bg = visual.bg||this._getBackgroundColor(xy); 
-            Game.display.draw(xy.x, xy.y + Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(visual.fg), ROT.Color.toRGB(bg));
+            if(this.isInMap(xy)){
+                var visual = this._visualAt(xy);
+                var bg = visual.bg||this._getBackgroundColor(xy); 
+                Game.display.draw(xy.x, xy.y + Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(visual.fg), ROT.Color.toRGB(bg));
+            }
+        }
+        isInMap(xy:Vector2){
+            return xy.x>0 && xy.y>0 && xy.x<Game.MAP_SIZE.x && xy.y<Game.MAP_SIZE.y
         }
         _getBackgroundColor(xy:Vector2):[number,number,number] {
             return [255,255,255];
@@ -182,9 +188,11 @@ module bergecraft.rogue.Level{
             if (Game.level == this) { this.draw(xy); }
         }
         _drawWeak(xy:Vector2, visual:IVisual) {
-            var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.5);
-            var bg = visual.bg || this._getBackgroundColor(xy);
-            Game.display.draw(xy.x, xy.y + Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(fg), ROT.Color.toRGB(bg));
+            if(this.isInMap(xy)){
+                var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.5);
+                var bg = visual.bg || this._getBackgroundColor(xy);
+                Game.display.draw(xy.x, xy.y + Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(fg), ROT.Color.toRGB(bg));
+            }
         }
         _updateFOV(being:Player) {
             var oldFOV = this._fov;

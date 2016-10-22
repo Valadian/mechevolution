@@ -67,6 +67,7 @@ module bergecraft.rogue{
         }
         act():Promise {
            // Progress.turns++;
+           Game.status.update();
             //Game.status.updatePart("turns");
             this._promise = new Promise();
             
@@ -110,22 +111,31 @@ module bergecraft.rogue{
                         } else{
                             Game.level.setCell(Cell.empty,xy);
                             Game.text.write(destroyMessage);
+                            this._level.setBeing(this,this._pos);
                         }
+                        Game.scheduler.setDuration(300);
                         Game.level.draw(xy);
+                        return this._promise.fulfill();
                     }
                     return this._listen();
                 } else { /* movement */
                     Game.text.write("You swing at the air.");
+                    Game.scheduler.setDuration(150);
+                    return this._promise.fulfill();
                 }
             } else if(code in this._keys){
                 var next_dir = this._keys[code];
                 if(next_dir != this._direction && !this._instant_rotation){
                     //handle rotation
+                    var onewayturns = Math.max(this._direction,next_dir)-Math.min(this._direction,next_dir)
+                    var otherwayturns = 8-onewayturns;
+                    var turns = Math.min(onewayturns,otherwayturns);
                     this._direction = next_dir;
                     this._visual.ch = this._ch_dirs[this._direction];
                     this._level.setBeing(this,this._pos);
+                    Game.scheduler.setDuration(50*turns);
                     //this._level.draw(this._pos);
-                    return this._listen();
+                    return this._promise.fulfill();
                 }
                 this._direction = next_dir;
                 this._visual.ch = this._ch_dirs[this._direction];
@@ -142,8 +152,8 @@ module bergecraft.rogue{
                             return this._listen();
                         }else { /* movement */
                             this._level.setBeing(this, xy);
+                            return this._promise.fulfill();
                         }
-                        break;
                     case PlayerMode.mine:
                         break;
                     case PlayerMode.build:

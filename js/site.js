@@ -259,7 +259,7 @@ var bergecraft;
                 description: "quartz"
             }, true, Cell.wall);
             Cell.empty = new Cell({
-                ch: ".",
+                ch: " ",
                 fg: [151, 151, 151]
             }, false);
             return Cell;
@@ -372,6 +372,7 @@ var bergecraft;
             };
             Game._start = function () {
                 Game.scheduler = new ROT.Scheduler.Action();
+                Game.scheduler._defaultDuration = 100;
                 Game.engine = new ROT.Engine(this.scheduler);
                 /* build a level and position a player */
                 var underground = new rogue.Level.Underground(1);
@@ -592,8 +593,9 @@ var bergecraft;
                 };
                 Underground.prototype._drawWeak = function (xy, visual) {
                     if (this.isInMap(xy)) {
-                        var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.5);
-                        var bg = visual.bg || this._getBackgroundColor(xy);
+                        var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.25);
+                        //var bg = visual.bg || this._getBackgroundColor(xy);
+                        var bg = ROT.Color.interpolate([0, 0, 0], visual.bg || this._getBackgroundColor(xy), 0.6);
                         rogue.Game.display.draw(xy.x, xy.y + rogue.Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(fg), ROT.Color.toRGB(bg));
                     }
                 };
@@ -710,6 +712,7 @@ var bergecraft;
             }
             Player.prototype.act = function () {
                 // Progress.turns++;
+                rogue.Game.status.update();
                 //Game.status.updatePart("turns");
                 this._promise = new rogue.Promise();
                 this._listen();
@@ -756,24 +759,33 @@ var bergecraft;
                             else {
                                 rogue.Game.level.setCell(rogue.Cell.empty, xy);
                                 rogue.Game.text.write(destroyMessage);
+                                this._level.setBeing(this, this._pos);
                             }
+                            rogue.Game.scheduler.setDuration(300);
                             rogue.Game.level.draw(xy);
+                            return this._promise.fulfill();
                         }
                         return this._listen();
                     }
                     else {
                         rogue.Game.text.write("You swing at the air.");
+                        rogue.Game.scheduler.setDuration(150);
+                        return this._promise.fulfill();
                     }
                 }
                 else if (code in this._keys) {
                     var next_dir = this._keys[code];
                     if (next_dir != this._direction && !this._instant_rotation) {
                         //handle rotation
+                        var onewayturns = Math.max(this._direction, next_dir) - Math.min(this._direction, next_dir);
+                        var otherwayturns = 8 - onewayturns;
+                        var turns = Math.min(onewayturns, otherwayturns);
                         this._direction = next_dir;
                         this._visual.ch = this._ch_dirs[this._direction];
                         this._level.setBeing(this, this._pos);
+                        rogue.Game.scheduler.setDuration(50 * turns);
                         //this._level.draw(this._pos);
-                        return this._listen();
+                        return this._promise.fulfill();
                     }
                     this._direction = next_dir;
                     this._visual.ch = this._ch_dirs[this._direction];
@@ -794,8 +806,8 @@ var bergecraft;
                             }
                             else {
                                 this._level.setBeing(this, xy);
+                                return this._promise.fulfill();
                             }
-                            break;
                         case PlayerMode.mine:
                             break;
                         case PlayerMode.build:
@@ -999,8 +1011,8 @@ var bergecraft;
                 var row2 = 2 + rogue.Game.TEXT_HEIGHT + rogue.Game.MAP_SIZE.y;
                 // this.drawCharacters(1,row1," ",50,50);
                 // this.drawCharacters(1,row2," ",50,50);
-                // Game.display.drawText(1,row1,"  Mode: ",6);
-                // this.clearAndDrawText(10,row1,PlayerMode[Game.player.mode],10);
+                rogue.Game.display.drawText(1, row1, "  Time: ", 6);
+                this.clearAndDrawText(10, row1, rogue.Game.scheduler.getTime().toString(), 10);
                 // Game.display.drawText(10,row1,PlayerMode[Game.player.mode],10);
                 rogue.Game.display.drawText(1, row2, "Tool: ", 6);
                 rogue.Game.display.drawText(10, row2, rogue.Game.player.tool, 10);

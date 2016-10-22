@@ -95,7 +95,7 @@ module bergecraft.rogue{
             description:"quartz"
         },true,Cell.wall);
         static empty = new Cell({
-            ch: ".",
+            ch: " ",
             fg: [151, 151, 151]
         }, false);
     }

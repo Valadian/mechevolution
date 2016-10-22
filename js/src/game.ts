@@ -72,6 +72,7 @@ module bergecraft.rogue{
         }
         static _start() {
             Game.scheduler = new ROT.Scheduler.Action();
+            (Game.scheduler as any)._defaultDuration = 100;
             Game.engine = new ROT.Engine(this.scheduler);
 
             /* build a level and position a player */

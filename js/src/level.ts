@@ -189,8 +189,9 @@ module bergecraft.rogue.Level{
         }
         _drawWeak(xy:Vector2, visual:IVisual) {
             if(this.isInMap(xy)){
-                var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.5);
-                var bg = visual.bg || this._getBackgroundColor(xy);
+                var fg = ROT.Color.interpolate([0, 0, 0], visual.fg, 0.25);
+                //var bg = visual.bg || this._getBackgroundColor(xy);
+                var bg = ROT.Color.interpolate([0,0,0],visual.bg || this._getBackgroundColor(xy),0.6);
                 Game.display.draw(xy.x, xy.y + Game.TEXT_HEIGHT, visual.ch, ROT.Color.toRGB(fg), ROT.Color.toRGB(bg));
             }
         }

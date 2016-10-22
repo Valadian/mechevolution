@@ -415,7 +415,7 @@ declare module ROT.FOV{
     export class PreciseShadowcasting extends FOV{}
     export class RecursiveShadowcasting extends FOV{
         compute180(x:number, y:number, R:number, dir:number,callback:ComputeLightCallback);
-        compute90S(x:number, y:number, R:number, dir:number,callback:ComputeLightCallback);
+        compute90(x:number, y:number, R:number, dir:number,callback:ComputeLightCallback);
 
     }
 }

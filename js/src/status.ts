@@ -6,8 +6,8 @@ module bergecraft.rogue{
             var row2 = 2+Game.TEXT_HEIGHT+Game.MAP_SIZE.y;
             // this.drawCharacters(1,row1," ",50,50);
             // this.drawCharacters(1,row2," ",50,50);
-            Game.display.drawText(1,row1,"  Mode: ",6);
-            this.clearAndDrawText(10,row1,PlayerMode[Game.player.mode],10);
+            // Game.display.drawText(1,row1,"  Mode: ",6);
+            // this.clearAndDrawText(10,row1,PlayerMode[Game.player.mode],10);
             // Game.display.drawText(10,row1,PlayerMode[Game.player.mode],10);
 
             Game.display.drawText(1,row2,"Tool: ",6);
@@ -19,7 +19,7 @@ module bergecraft.rogue{
 
             Game.display.drawText(30,row2,"Armor  : ",6);
             //Game.display.drawText(40,row2,"%c{#999}".rpad("o",8+Game.player.getStat("defense"))+"%c{}",10); //⛊
-            this.drawCharacters(40, row2,"\u26CA",Game.player.getStat("defense"),10,"#999")//,null,2
+            this.drawCharacters(40, row2,"\u26CA",Game.player.getStat("defense"),10,"#99f")//,null,2
             //Game.display.draw(40,row2,"⛊")
         }   
         clearAndDrawText(x:number, y:number, text:string, clearSize:number){

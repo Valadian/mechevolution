@@ -10,11 +10,26 @@ module bergecraft.rogue{
         _keys:{};
         _promise:Promise = null;
         _ch_dirs = {};
+        _direction = 0;
+        _instant_rotation = false;
+        //† 2020
+        //‡ 2021
+        //☀ 2600
+        //☻ 263B
+        //⚒ 2692
+        //⚔ 2694
+        //⛏ 26CF
+        //⛨ 26E8
+        //⛬ 26EC
+        //⭠⭡⭢⭣⭤⭥⭦⭧⭨⭩ 2B60
+        //ⴾ 2D3E
+        //ⵘ 2D58
+        //🔨 1F528
         constructor(pos?:Vector2){
-            super({ch:"B",fg:[0,255,0],description:"self"});
+            super({ch:"\u25B2",fg:[0,255,0],description:"self"});
 
             this._ch_dirs = ["\u25B2","\u25E5","\u25B6","\u25E2","\u25BC","\u25E3","\u25C0","\u25E4"];
-            this._char = "B";
+            this._char = "\u25B2";
             this._color = ROT.Color.fromString("green");
             this.mode = PlayerMode.move;
             this.setStat("hp",4);
@@ -69,18 +84,52 @@ module bergecraft.rogue{
             window.removeEventListener("keydown", this);
             Game.text.clear();
 	        var code = e.keyCode;
-            if(code==ROT.VK_TAB){
-			    e.preventDefault();
-                const objValues = Object.keys(PlayerMode).map(k => PlayerMode[k]);
-                const values = objValues.filter(v => typeof v === "number") as number[];
-                this.mode = (this.mode+1)%values.length;
-                Game.status.update();
-                this._listen();
-            }
-            if(code in this._keys){
-                var direction = this._keys[code];
-                this._visual.ch = this._ch_dirs[direction];
-                var dir = ROT.DIRS[8][direction];
+            // if(code==ROT.VK_TAB){
+			//     e.preventDefault();
+            //     const objValues = Object.keys(PlayerMode).map(k => PlayerMode[k]);
+            //     const values = objValues.filter(v => typeof v === "number") as number[];
+            //     this.mode = (this.mode+1)%values.length;
+            //     Game.status.update();
+            //     return this._listen();
+            // } else 
+            if(code==ROT.VK_F||code==ROT.VK_NUMPAD5){
+                //Use Tool
+                var dir = ROT.DIRS[8][this._direction];
+                var xy = this._pos.plus(new Vector2(dir[0], dir[1]));
+                if (this._level.solid(xy)) { /* collision, noop */
+                    var target = this._level.getCellAt(xy);
+                    var targetName = target.toString();
+                    var d = target.getVisual().description;
+                    if (d) { 
+                        var damageMessage = ("You hit %a with your "+this.tool+".").format(this._level.getCellAt(xy));
+                        var destroyMessage = ("You destroy %a with your %s.").format(this._level.getCellAt(xy),this.tool);
+                        var next = target.incrementState();
+                        if(next){
+                            this._level.setCell(next,xy);
+                            Game.text.write(damageMessage);
+                        } else{
+                            Game.level.setCell(Cell.empty,xy);
+                            Game.text.write(destroyMessage);
+                        }
+                        Game.level.draw(xy);
+                    }
+                    return this._listen();
+                } else { /* movement */
+                    Game.text.write("You swing at the air.");
+                }
+            } else if(code in this._keys){
+                var next_dir = this._keys[code];
+                if(next_dir != this._direction && !this._instant_rotation){
+                    //handle rotation
+                    this._direction = next_dir;
+                    this._visual.ch = this._ch_dirs[this._direction];
+                    this._level.setBeing(this,this._pos);
+                    //this._level.draw(this._pos);
+                    return this._listen();
+                }
+                this._direction = next_dir;
+                this._visual.ch = this._ch_dirs[this._direction];
+                var dir = ROT.DIRS[8][this._direction];
                 var xy = this._pos.plus(new Vector2(dir[0], dir[1]));
                 switch(this.mode){
                     case PlayerMode.move:
@@ -96,43 +145,22 @@ module bergecraft.rogue{
                         }
                         break;
                     case PlayerMode.mine:
-                        if (this._level.solid(xy)) { /* collision, noop */
-                            var target = this._level.getCellAt(xy);
-                            var targetName = target.toString();
-                            var d = target.getVisual().description;
-                            if (d) { 
-                                var damageMessage = ("You hit %a with your "+this.tool+".").format(this._level.getCellAt(xy));
-                                var destroyMessage = ("You destroy %a with your %s.").format(this._level.getCellAt(xy),this.tool);
-                                var next = target.incrementState();
-                                if(next){
-                                    this._level.setCell(next,xy);
-                                    Game.text.write(damageMessage);
-                                } else{
-                                    Game.level.setCell(Cell.empty,xy);
-                                    Game.text.write(destroyMessage);
-                                }
-                                Game.level.draw(xy);
-                            }
-                            return this._listen();
-                        } else { /* movement */
-                            Game.text.write("You swing at the air.");
-                        }
                         break;
                     case PlayerMode.build:
                         break;
                 }
-                return this._listen();
                 //return this._promise.fulfill();
             }
+            return this._listen();
         }
         computeFOV() {
             var result = {};
             
             var level = this._level;
-            var fov = new ROT.FOV.PreciseShadowcasting(function(x, y) {
+            var fov = new ROT.FOV.RecursiveShadowcasting(function(x, y) {
                 return !level.solid(new Vector2(x, y));
             });
-            fov.compute(this._pos.x, this._pos.y, this.getStat("sight"), function(x, y, r, amount) {
+            fov.compute90(this._pos.x, this._pos.y, this.getStat("sight"), this._direction, function(x, y, r, amount) {
                 var xy = new Vector2(x, y);
                 result[xy.toString()] = xy;
             });

@@ -41,7 +41,7 @@ module bergecraft.rogue{
                 size: new Vector2(Game.MAP_SIZE.x, Game.TEXT_HEIGHT)
             });
             Game.text.clear();
-            Game.text.write("[asdf] or [arrows] to move. [tab] to change mode")
+            Game.text.write("[asdf] [arrows] or [numpad] to move.\n[f] or [numpad5] to use active tool.")
             Game.status = new Status();
             // new Promise((resolve, reject)=>{
             //     resolve(this.findClearSpot());

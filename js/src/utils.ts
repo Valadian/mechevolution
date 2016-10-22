@@ -1,5 +1,6 @@
 module bergecraft.rogue{
-
+    export class Utils{
+    }
     // export class Array{
     //     static random<T>(self:T[]) {
     //         if (!self.length) { return null; }

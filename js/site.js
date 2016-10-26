@@ -61,11 +61,16 @@ var bergecraft;
             function Being(visual) {
                 _super.call(this, visual);
                 this._stats = {};
+                this._sounds = [];
+                this._id = ROT.RNG.getUniformInt(0, Number.MAX_VALUE).toString();
                 //this._pos = pos;
                 rogue.Stats.all.forEach(function (name) {
                     this._stats[name] = rogue.Stats[name].def;
                 }, this);
             }
+            Being.prototype.getId = function () {
+                return this._id;
+            };
             Being.prototype.getStat = function (name) {
                 return this._stats[name];
             };
@@ -84,7 +89,7 @@ var bergecraft;
             Being.prototype.getSpeed = function () {
                 return this.getStat("speed");
             };
-            Being.prototype.damage = function (damage) {
+            Being.prototype.damage = function (attacker, damage) {
                 this.adjustStat("hp", -damage);
                 if (this.getStat("hp") <= 0) {
                     this.die();
@@ -115,7 +120,7 @@ var bergecraft;
                 var damage = Math.ceil(attack / defense) - 1;
                 this._describeAttack(defender, damage);
                 if (damage) {
-                    defender.damage(damage);
+                    defender.damage(this, damage);
                 }
             };
             Being.prototype._describeAttack = function (defender, damage) {
@@ -157,12 +162,116 @@ var bergecraft;
             };
             Being.prototype.draw = function () {
             };
+            Being.prototype.addSound = function (decibel, pos) {
+                //50db 10 hearing
+                var threshold = (this.getStat("hearing") - 10) * 5;
+                if (decibel > threshold) {
+                    //notice sound
+                    //take into account distance and volume
+                    //take into account being rotation for location approximation?
+                    this._sounds.push({ volume: decibel, pos: pos });
+                }
+            };
             return Being;
         }(rogue.Entity));
         rogue.Being = Being;
     })(rogue = bergecraft.rogue || (bergecraft.rogue = {}));
 })(bergecraft || (bergecraft = {}));
+var bergecraft;
+(function (bergecraft) {
+    var rogue;
+    (function (rogue) {
+        var SoundManager = (function () {
+            function SoundManager() {
+            }
+            SoundManager.prototype.makeSound = function (db, x, y, description) {
+                var soundData = {};
+                var lightpasses = function (x, y) {
+                    return !(rogue.Game.level.solid(new rogue.Vector2(x, y)));
+                };
+                var fov = new SoundManager.cfg.shadowcastingAlgo(lightpasses, { topology: 4 });
+                var reflectivity = function (x, y) {
+                    return rogue.Game.level.getCellAt(new rogue.Vector2(x, y)).sound_reflectivity;
+                };
+                var soundengine = new ROT.Lighting(reflectivity, { range: SoundManager.cfg.range_scalar * db, passes: SoundManager.cfg.passes, emissionThreshold: SoundManager.cfg.emissionThreshold * SoundManager.cfg.dbToColor });
+                soundengine.setFOV(fov);
+                soundengine.setLight(x, y, [db * SoundManager.cfg.dbToColor, db * SoundManager.cfg.dbToColor, db * SoundManager.cfg.dbToColor]);
+                var soundcallback = function (x, y, color) {
+                    soundData[new rogue.Vector2(x, y).toString()] = color;
+                };
+                soundengine.compute(soundcallback);
+                for (var id in soundData) {
+                    var pos = rogue.Vector2.fromString(id);
+                    var localDb = soundData[id];
+                    var being = rogue.Game.level.getBeingAt(pos);
+                    var displayedData = rogue.Game.display._data[new rogue.Vector2(pos.x, pos.y + 3).toString()];
+                    var bg = "#000";
+                    if (displayedData) {
+                        bg = displayedData[4];
+                    }
+                    rogue.Game.display.draw(pos.x, pos.y + 3, "?", ROT.Color.toHex(localDb), bg);
+                }
+            };
+            SoundManager.prototype.makeSoundCustom = function (db, x, y) {
+                var _this = this;
+                var soundData = {};
+                var start = new rogue.Vector2(x, y);
+                var dbm = Math.pow(2, db / 10);
+                var soundRecursive = function (dbm, xy) {
+                    soundData[xy.toString()] = dbm;
+                    _this.draw(dbm, xy);
+                    //var adj:Vector2[] = [];
+                    for (var _i = 0, _a = ROT.DIRS[8]; _i < _a.length; _i++) {
+                        var a_dir = _a[_i];
+                        var diag = a_dir[0] != 0 && a_dir[1] != 0;
+                        var dir = new rogue.Vector2(a_dir[0], a_dir[1]);
+                        var next = xy.plus(dir);
+                        var cell = rogue.Game.level.getCellAt(next);
+                        var next_dbm = Math.floor(dbm * (diag ? Math.pow(1 - cell.dampening, 1.414) : 1 - cell.dampening));
+                        var curr_val = soundData[next.toString()];
+                        if ((curr_val == null || next_dbm > curr_val) && next_dbm > 2) {
+                            soundRecursive(next_dbm, next);
+                        }
+                    }
+                };
+                soundRecursive(dbm, start);
+            };
+            SoundManager.prototype.draw = function (dbm, pos) {
+                var displayedData = rogue.Game.display._data[new rogue.Vector2(pos.x, pos.y + 3).toString()];
+                var db = Math.floor(Math.log(dbm) / Math.log(2) * 10);
+                var bg = "#000";
+                if (displayedData) {
+                    bg = displayedData[4];
+                }
+                rogue.Game.display.draw(pos.x, pos.y + 3, "?", ROT.Color.toHex([255 - db * 3, db * 3, 0]), bg);
+            };
+            // static config:ISoundOptions = {
+            //     empty_reflectivity:0.2,
+            //     solid_reflectivity:0.8,
+            //     range_scalar:0.2,
+            //     passes:2,
+            //     emissionThreshold:10,
+            //     shadowcastingAlgo:ROT.FOV.RecursiveShadowcasting,
+            //     ambient:40,
+            //     dbToColor:2
+            // }
+            SoundManager.cfg = {
+                empty_reflectivity: 0,
+                solid_reflectivity: 0,
+                range_scalar: 0.15,
+                passes: 3,
+                emissionThreshold: 30,
+                shadowcastingAlgo: ROT.FOV.RecursiveShadowcasting,
+                ambient: 20,
+                dbToColor: 2
+            };
+            return SoundManager;
+        }());
+        rogue.SoundManager = SoundManager;
+    })(rogue = bergecraft.rogue || (bergecraft.rogue = {}));
+})(bergecraft || (bergecraft = {}));
 /// <reference path="entity.ts" />
+/// <reference path="sound.ts" />
 var bergecraft;
 (function (bergecraft) {
     var rogue;
@@ -179,6 +288,8 @@ var bergecraft;
                     this._hasStates = false;
                 }
                 this._solid = solid;
+                this.sound_reflectivity = solid ? rogue.SoundManager.cfg.solid_reflectivity : rogue.SoundManager.cfg.empty_reflectivity;
+                this.dampening = solid ? 0.5 : 0.07;
             }
             Cell.prototype.incrementState = function () {
                 if (this._hasStates) {
@@ -271,6 +382,71 @@ var bergecraft;
 (function (bergecraft) {
     var rogue;
     (function (rogue) {
+        var DirectionalBeing = (function (_super) {
+            __extends(DirectionalBeing, _super);
+            function DirectionalBeing(visual) {
+                _super.call(this, visual);
+                this._ch_dirs = [DirectionalBeing.CH_N,
+                    DirectionalBeing.CH_NE,
+                    DirectionalBeing.CH_E,
+                    DirectionalBeing.CH_SE,
+                    DirectionalBeing.CH_S,
+                    DirectionalBeing.CH_SW,
+                    DirectionalBeing.CH_W,
+                    DirectionalBeing.CH_NW];
+                this._direction = 0;
+                this._instant_rotation = false;
+                this._lastDuration = 100;
+            }
+            DirectionalBeing.prototype._rotateTo = function (direction) {
+                var turns = this._turnsBetween(this._direction, direction);
+                this._setRot(direction);
+                this._level.setBeing(this, this._pos);
+                rogue.Game.scheduler.setDuration(DirectionalBeing.BASE_ROTATE_TIME * turns);
+            };
+            DirectionalBeing.prototype._setRot = function (direction) {
+                this._direction = direction;
+                this._visual.ch = this._ch_dirs[this._direction];
+            };
+            DirectionalBeing.prototype._turnsBetween = function (dir1, dir2) {
+                var onewayturns = Math.max(dir1, dir2) - Math.min(dir1, dir2);
+                var otherwayturns = 8 - onewayturns;
+                return Math.min(onewayturns, otherwayturns);
+            };
+            DirectionalBeing.prototype.computeFOV = function () {
+                var result = {};
+                var level = this._level;
+                var fov = new ROT.FOV.RecursiveShadowcasting(function (x, y) {
+                    return !level.solid(new rogue.Vector2(x, y));
+                });
+                fov.compute90(this._pos.x, this._pos.y, this.getStat("sight"), this._direction, function (x, y, r, amount) {
+                    var xy = new rogue.Vector2(x, y);
+                    result[xy.toString()] = xy;
+                });
+                return result;
+            };
+            DirectionalBeing.CH_N = "\u25B2";
+            DirectionalBeing.CH_NE = "\u25E5";
+            DirectionalBeing.CH_E = "\u25B6";
+            DirectionalBeing.CH_SE = "\u25E2";
+            DirectionalBeing.CH_S = "\u25BC";
+            DirectionalBeing.CH_SW = "\u25E3";
+            DirectionalBeing.CH_W = "\u25C0";
+            DirectionalBeing.CH_NW = "\u25E4";
+            DirectionalBeing.BASE_ROTATE_TIME = 50;
+            DirectionalBeing.BASE_MOVE_TIME = 100;
+            DirectionalBeing.BASE_MOVE_DIAGONAL_TIME = DirectionalBeing.BASE_MOVE_TIME * 1.41;
+            DirectionalBeing.BASE_HIT_TIME = 300;
+            DirectionalBeing.BASE_MISS_TIME = 150;
+            return DirectionalBeing;
+        }(rogue.Being));
+        rogue.DirectionalBeing = DirectionalBeing;
+    })(rogue = bergecraft.rogue || (bergecraft.rogue = {}));
+})(bergecraft || (bergecraft = {}));
+var bergecraft;
+(function (bergecraft) {
+    var rogue;
+    (function (rogue) {
         var Vector2 = (function () {
             function Vector2(x, y) {
                 this.x = x || 0;
@@ -322,6 +498,7 @@ var bergecraft;
             }
             Game.init = function () {
                 //ROT.RNG.setSeed(12345);
+                Game.sound = new rogue.SoundManager();
                 Game.player = new rogue.Player();
                 Game.display = new ROT.Display({
                     width: Game.MAP_SIZE.x,
@@ -331,11 +508,13 @@ var bergecraft;
                 document.body.appendChild(Game.display.getContainer());
                 Game.data = {};
                 Game.map = new ROT.Map.Cellular(Game.MAP_SIZE.x, Game.MAP_SIZE.y);
-                Game.map.randomize(0.55);
-                Game.map.create(function (x, y, value) {
-                    Game.data[x + "," + y] = value;
-                    //Game.display.DEBUG(x,y,value);
-                });
+                Game.map.randomize(0.45);
+                for (var i = 0; i < 4; i++) {
+                    Game.map.create(function (x, y, value) {
+                        Game.data[x + "," + y] = value;
+                        //Game.display.DEBUG(x,y,value);
+                    });
+                }
                 Game.text = new rogue.TextBuffer();
                 Game.text.configure({
                     display: Game.display,
@@ -397,6 +576,67 @@ var bergecraft;
     })(rogue = bergecraft.rogue || (bergecraft.rogue = {}));
 })(bergecraft || (bergecraft = {}));
 var Game = bergecraft.rogue.Game.prototype;
+var bergecraft;
+(function (bergecraft) {
+    var rogue;
+    (function (rogue) {
+        var Hostile = (function (_super) {
+            __extends(Hostile, _super);
+            function Hostile(pos) {
+                _super.call(this, { ch: rogue.DirectionalBeing.CH_N, fg: [255, 0, 0], description: "hostile" });
+                this._idMap = {};
+                this._aggroById = {};
+                this._pos = pos;
+            }
+            Hostile.prototype.act = function () {
+                var _this = this;
+                var fov = this.computeFOV();
+                for (var xy in fov) {
+                    var being = this._level.getBeingAt(rogue.Vector2.fromString(xy));
+                    if (being == rogue.Game.player) {
+                        this.addAggro(being, 10);
+                    }
+                }
+                //handle noise in environment
+                //decrement aggro (5/100)
+                var decrement = -rogue.Game.scheduler._duration * 5 / 100;
+                Object.keys(this._aggroById).forEach(function (key) { return _this.addAggro(key, decrement); });
+                for (var id in this._aggroById) {
+                    this.addAggro(id, decrement);
+                }
+                //move towards highest aggro
+                var target = this._findHighestAggro();
+                //attack if next to player
+            };
+            Hostile.prototype.addAggro = function (being, value) {
+                var id;
+                if (being instanceof rogue.Being) {
+                    this._idMap[being.getId()] = being;
+                    id = being.getId();
+                }
+                else {
+                    id = being;
+                }
+                this._aggroById[id] = Math.max(this._aggroById[id] + value, 0);
+            };
+            Hostile.prototype._findHighestAggro = function () {
+                var sortable = [];
+                for (var id in this._aggroById)
+                    sortable.push([id, this._aggroById[id]]);
+                sortable.sort(function (a, b) {
+                    return b[1] - a[1];
+                });
+                var targetId = sortable[0];
+            };
+            Hostile.prototype.damage = function (attacker, damage) {
+                _super.prototype.damage.call(this, attacker, damage);
+                this._aggroById[attacker.getId()] += 10 * damage;
+            };
+            return Hostile;
+        }(rogue.DirectionalBeing));
+        rogue.Hostile = Hostile;
+    })(rogue = bergecraft.rogue || (bergecraft.rogue = {}));
+})(bergecraft || (bergecraft = {}));
 var bergecraft;
 (function (bergecraft) {
     var rogue;
@@ -525,6 +765,7 @@ var bergecraft;
                     this._createMinerals(rogue.Cell.copper, 125);
                     this._createMinerals(rogue.Cell.tin, 125);
                     this._createMinerals(rogue.Cell.quartz, 20);
+                    this._createHostiles(15);
                 };
                 Underground.prototype._createWalls = function () {
                     for (var val in rogue.Game.data) {
@@ -543,6 +784,15 @@ var bergecraft;
                         var pos = this._getRandomPos();
                         if (pos && this.getCellAt(pos) == rogue.Cell.wall) {
                             this._cells[pos.toString()] = mineral;
+                        }
+                    }
+                };
+                Underground.prototype._createHostiles = function (count) {
+                    for (var i = 0; i < count; i++) {
+                        var pos = this._getRandomPos();
+                        if (pos && this.getCellAt(pos) == rogue.Cell.empty) {
+                            var mob = new rogue.Hostile(pos);
+                            this.setBeing(mob, pos);
                         }
                     }
                 };
@@ -642,6 +892,7 @@ var bergecraft;
     })(rogue = bergecraft.rogue || (bergecraft.rogue = {}));
 })(bergecraft || (bergecraft = {}));
 /// <reference path="being.ts" />
+/// <reference path="directionalbeing.ts" />
 var bergecraft;
 (function (bergecraft) {
     var rogue;
@@ -654,6 +905,9 @@ var bergecraft;
         var PlayerMode = rogue.PlayerMode;
         var Player = (function (_super) {
             __extends(Player, _super);
+            //_ch_dirs = {};
+            //_direction = 0;
+            //_instant_rotation = false;
             //† 2020
             //‡ 2021
             //☀ 2600
@@ -668,15 +922,12 @@ var bergecraft;
             //ⵘ 2D58
             //🔨 1F528
             function Player(pos) {
-                _super.call(this, { ch: "\u25B2", fg: [0, 255, 0], description: "self" });
+                _super.call(this, { ch: rogue.DirectionalBeing.CH_N, fg: [0, 255, 0], description: "self" });
                 this.tool = "Pickaxe";
                 this._promise = null;
-                this._ch_dirs = {};
-                this._direction = 0;
-                this._instant_rotation = false;
-                this._ch_dirs = ["\u25B2", "\u25E5", "\u25B6", "\u25E2", "\u25BC", "\u25E3", "\u25C0", "\u25E4"];
-                this._char = "\u25B2";
-                this._color = ROT.Color.fromString("green");
+                //this._ch_dirs = ["\u25B2","\u25E5","\u25B6","\u25E2","\u25BC","\u25E3","\u25C0","\u25E4"];
+                //this._char = "\u25B2";
+                //this._color = ROT.Color.fromString("green");
                 this.mode = PlayerMode.move;
                 this.setStat("hp", 4);
                 this.setStat("defense", 5);
@@ -777,14 +1028,14 @@ var bergecraft;
                     var next_dir = this._keys[code];
                     if (next_dir != this._direction && !this._instant_rotation) {
                         //handle rotation
-                        var onewayturns = Math.max(this._direction, next_dir) - Math.min(this._direction, next_dir);
-                        var otherwayturns = 8 - onewayturns;
-                        var turns = Math.min(onewayturns, otherwayturns);
-                        this._direction = next_dir;
-                        this._visual.ch = this._ch_dirs[this._direction];
-                        this._level.setBeing(this, this._pos);
-                        rogue.Game.scheduler.setDuration(50 * turns);
-                        //this._level.draw(this._pos);
+                        this._rotateTo(next_dir);
+                        // var onewayturns = Math.max(this._direction,next_dir)-Math.min(this._direction,next_dir)
+                        // var otherwayturns = 8-onewayturns;
+                        // var turns = Math.min(onewayturns,otherwayturns);
+                        // this._direction = next_dir;
+                        // this._visual.ch = this._ch_dirs[this._direction];
+                        // this._level.setBeing(this,this._pos);
+                        // Game.scheduler.setDuration(50*turns);\
                         return this._promise.fulfill();
                     }
                     this._direction = next_dir;
@@ -816,24 +1067,12 @@ var bergecraft;
                 }
                 return this._listen();
             };
-            Player.prototype.computeFOV = function () {
-                var result = {};
-                var level = this._level;
-                var fov = new ROT.FOV.RecursiveShadowcasting(function (x, y) {
-                    return !level.solid(new rogue.Vector2(x, y));
-                });
-                fov.compute90(this._pos.x, this._pos.y, this.getStat("sight"), this._direction, function (x, y, r, amount) {
-                    var xy = new rogue.Vector2(x, y);
-                    result[xy.toString()] = xy;
-                });
-                return result;
-            };
             Player.prototype._listen = function (e) {
                 rogue.Game.text.flush();
                 window.addEventListener("keydown", this);
             };
             return Player;
-        }(rogue.Being));
+        }(rogue.DirectionalBeing));
         rogue.Player = Player;
     })(rogue = bergecraft.rogue || (bergecraft.rogue = {}));
 })(bergecraft || (bergecraft = {}));
@@ -958,8 +1197,8 @@ var bergecraft;
         var Stats = (function () {
             function Stats() {
             }
-            Stats.all = ["hp", "maxhp", "speed", "sight", "attack", "defense"];
-            Stats.avail = ["maxhp", "speed", "sight", "attack", "defense"];
+            Stats.all = ["hp", "maxhp", "speed", "sight", "attack", "defense", "noise", "hearing"];
+            Stats.avail = ["maxhp", "speed", "sight", "attack", "defense", "noise", "hearing"];
             Stats.maxhp = {
                 def: 2,
                 short: "HP",
@@ -969,6 +1208,14 @@ var bergecraft;
             Stats.hp = {
                 def: Stats.maxhp.def,
                 label: "HP"
+            };
+            Stats.noise = {
+                def: 10,
+                label: "Noise"
+            };
+            Stats.hearing = {
+                def: 10,
+                label: "Hearing"
             };
             Stats.speed = {
                 def: 10,

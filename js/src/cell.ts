@@ -1,4 +1,5 @@
 /// <reference path="entity.ts" />
+/// <reference path="sound.ts" />
 module bergecraft.rogue{
     export class Cell extends Entity{
         enter:Function;
@@ -6,6 +7,8 @@ module bergecraft.rogue{
         _solid:boolean;
         _hasStates:boolean;
         nextstate:Cell;
+        sound_reflectivity:number;
+        dampening:number;
         constructor(visual:IVisual,solid:boolean,next?:Cell){
             super(visual);
             if(next){
@@ -15,6 +18,8 @@ module bergecraft.rogue{
                 this._hasStates = false;
             }
             this._solid = solid;
+            this.sound_reflectivity = solid?SoundManager.cfg.solid_reflectivity:SoundManager.cfg.empty_reflectivity;
+            this.dampening = solid?0.5:0.07;
         }
         incrementState():Cell{
             if(this._hasStates){

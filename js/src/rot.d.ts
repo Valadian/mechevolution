@@ -309,7 +309,7 @@ declare module ROT {
         constructor(reflectivityCallback:ReflectivityCallback, options?:ILightingOptions);
         setOptions(options:ILightingOptions):Lighting;
         setFOV(fov:FOV):Lighting;
-        setLight(x:number,y:number,color?:string|number[]):Lighting;
+        setLight(x:number,y:number,color?:string|[number,number,number]):Lighting;
         clearLights();
         reset():Lighting;
         compute(lightingCallback:LightingCallback):Lighting
@@ -378,8 +378,8 @@ interface IsWallCallback {(x:number, y:number):boolean}
 interface CanBeDugCallback { (x: number, y: number): boolean; }
 interface LightPassesCallback { (x: number, y: number): boolean; }
 interface ComputeLightCallback { (x:number, y:number, r:number, visibility:number):void; }
-interface LightingCallback { (x:number, y:number, color:number[]):void; }
-interface ReflectivityCallback { (x:number, y:number):boolean; }
+interface LightingCallback { (x:number, y:number, color:[number,number,number]):void; }
+interface ReflectivityCallback { (x:number, y:number):number; }
 interface PassableCallback { (x:number, y:number):boolean;}
 interface PathCallback{ (x:number, y:number):void}
 

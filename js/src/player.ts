@@ -1,17 +1,17 @@
 /// <reference path="being.ts" />
+/// <reference path="directionalbeing.ts" />
 module bergecraft.rogue{
     export enum PlayerMode{
         move = 0,mine,build
     }
-    export class Player extends Being{
+    export class Player extends DirectionalBeing{
         mode:PlayerMode;
         tool:string = "Pickaxe";
-        pos:Vector2;
         _keys:{};
         _promise:Promise = null;
-        _ch_dirs = {};
-        _direction = 0;
-        _instant_rotation = false;
+        //_ch_dirs = {};
+        //_direction = 0;
+        //_instant_rotation = false;
         //† 2020
         //‡ 2021
         //☀ 2600
@@ -26,11 +26,11 @@ module bergecraft.rogue{
         //ⵘ 2D58
         //🔨 1F528
         constructor(pos?:Vector2){
-            super({ch:"\u25B2",fg:[0,255,0],description:"self"});
+            super({ch:DirectionalBeing.CH_N,fg:[0,255,0],description:"self"});
 
-            this._ch_dirs = ["\u25B2","\u25E5","\u25B6","\u25E2","\u25BC","\u25E3","\u25C0","\u25E4"];
-            this._char = "\u25B2";
-            this._color = ROT.Color.fromString("green");
+            //this._ch_dirs = ["\u25B2","\u25E5","\u25B6","\u25E2","\u25BC","\u25E3","\u25C0","\u25E4"];
+            //this._char = "\u25B2";
+            //this._color = ROT.Color.fromString("green");
             this.mode = PlayerMode.move;
             this.setStat("hp",4);
             this.setStat("defense",5);
@@ -127,14 +127,14 @@ module bergecraft.rogue{
                 var next_dir = this._keys[code];
                 if(next_dir != this._direction && !this._instant_rotation){
                     //handle rotation
-                    var onewayturns = Math.max(this._direction,next_dir)-Math.min(this._direction,next_dir)
-                    var otherwayturns = 8-onewayturns;
-                    var turns = Math.min(onewayturns,otherwayturns);
-                    this._direction = next_dir;
-                    this._visual.ch = this._ch_dirs[this._direction];
-                    this._level.setBeing(this,this._pos);
-                    Game.scheduler.setDuration(50*turns);
-                    //this._level.draw(this._pos);
+                    this._rotateTo(next_dir);
+                    // var onewayturns = Math.max(this._direction,next_dir)-Math.min(this._direction,next_dir)
+                    // var otherwayturns = 8-onewayturns;
+                    // var turns = Math.min(onewayturns,otherwayturns);
+                    // this._direction = next_dir;
+                    // this._visual.ch = this._ch_dirs[this._direction];
+                    // this._level.setBeing(this,this._pos);
+                    // Game.scheduler.setDuration(50*turns);\
                     return this._promise.fulfill();
                 }
                 this._direction = next_dir;
@@ -162,20 +162,6 @@ module bergecraft.rogue{
                 //return this._promise.fulfill();
             }
             return this._listen();
-        }
-        computeFOV() {
-            var result = {};
-            
-            var level = this._level;
-            var fov = new ROT.FOV.RecursiveShadowcasting(function(x, y) {
-                return !level.solid(new Vector2(x, y));
-            });
-            fov.compute90(this._pos.x, this._pos.y, this.getStat("sight"), this._direction, function(x, y, r, amount) {
-                var xy = new Vector2(x, y);
-                result[xy.toString()] = xy;
-            });
-            
-            return result;
         }
         _listen(e?:any) {
             Game.text.flush();

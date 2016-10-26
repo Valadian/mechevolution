@@ -1,7 +1,7 @@
 module bergecraft.rogue{
     export class Stats {
-        static all = ["hp", "maxhp", "speed", "sight", "attack", "defense"];
-        static avail = ["maxhp", "speed", "sight", "attack", "defense"];
+        static all = ["hp", "maxhp", "speed", "sight", "attack", "defense","noise","hearing"];
+        static avail = ["maxhp", "speed", "sight", "attack", "defense","noise","hearing"];
         
         static maxhp = {
             def: 2, /* shall be no more than ~55 in order to fit a 100-width */
@@ -13,6 +13,16 @@ module bergecraft.rogue{
         static hp = {
             def: Stats.maxhp.def,
             label: "HP"
+        }
+        
+        static noise = {
+            def: 10,
+            label: "Noise"
+        }
+        
+        static hearing = {
+            def: 10,
+            label: "Hearing"
         }
 
         static speed = {

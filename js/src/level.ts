@@ -9,6 +9,7 @@ module bergecraft.rogue{
         getSize():Vector2;
         isVisible(xy:Vector2):boolean;
         setBeing(being:Being, xy:Vector2);
+        getBeingAt(xy:Vector2):Being;
         getCellAt(xy:Vector2):Cell;
         isInMap(xy:Vector2):boolean;
     }
@@ -125,6 +126,7 @@ module bergecraft.rogue.Level{
             this._createMinerals(Cell.copper,125);
             this._createMinerals(Cell.tin,125);
             this._createMinerals(Cell.quartz,20);
+            this._createHostiles(15);
         }
         _createWalls(){
             for(var val in Game.data){
@@ -144,6 +146,15 @@ module bergecraft.rogue.Level{
                 var pos = this._getRandomPos();
                 if(pos && this.getCellAt(pos)==Cell.wall){
                     this._cells[pos.toString()] = mineral;
+                }
+            }
+        }
+        _createHostiles(count:number ){
+            for(var i = 0; i<count; i++){
+                var pos = this._getRandomPos();
+                if(pos && this.getCellAt(pos)==Cell.empty){
+                    var mob = new Hostile(pos);
+                    this.setBeing(mob, pos);
                 }
             }
         }

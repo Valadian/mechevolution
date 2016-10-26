@@ -1,16 +1,21 @@
 /// <reference path="entity.ts" />
 module bergecraft.rogue{
     export abstract class Being extends Entity{
-        _char:string;
-        _color:ROT.Color;
+        // _char:string;
+        // _color:ROT.Color;
+        _id:string;
         _pos:Vector2;
         _stats:{[id:string]:number} = {}
         constructor(visual:IVisual){
             super(visual);
+            this._id = ROT.RNG.getUniformInt(0,Number.MAX_VALUE).toString();
             //this._pos = pos;
             Stats.all.forEach(function(name) {
                 this._stats[name] = Stats[name].def;
             }, this);
+        }
+        getId(){
+            return this._id;
         }
         getStat(name:string){
             return this._stats[name];
@@ -31,7 +36,7 @@ module bergecraft.rogue{
             return this.getStat("speed");
         }
         
-        damage(damage) {
+        damage(attacker:Being, damage:number) {
             this.adjustStat("hp", -damage);
             if (this.getStat("hp") <= 0) { this.die(); }
         }
@@ -66,7 +71,7 @@ module bergecraft.rogue{
             
             this._describeAttack(defender, damage);
             
-            if (damage) { defender.damage(damage); }
+            if (damage) { defender.damage(this,damage); }
         }
         _describeAttack(defender:Being, damage:number) {
             if (!this._level.isVisible(this._pos) || !this._level.isVisible(defender.getPosition())) { return; }
@@ -100,6 +105,17 @@ module bergecraft.rogue{
         }
         draw(){
             
+        }
+        _sounds = []
+        addSound(decibel:number,pos:Vector2){
+            //50db 10 hearing
+            var threshold = (this.getStat("hearing")-10)*5
+            if(decibel>threshold){
+                //notice sound
+                //take into account distance and volume
+                //take into account being rotation for location approximation?
+                this._sounds.push({volume:decibel,pos:pos});
+            }
         }
     }
 }
